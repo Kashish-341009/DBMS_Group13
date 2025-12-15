@@ -1,0 +1,431 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema sp
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema sp
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `sp` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
+-- -----------------------------------------------------
+-- Schema zomato_dbms
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema zomato_dbms
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `zomato_dbms` DEFAULT CHARACTER SET utf8mb4 ;
+USE `sp` ;
+
+-- -----------------------------------------------------
+-- Table `sp`.`p`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sp`.`p` (
+  `pnum` INT NOT NULL,
+  `pname` VARCHAR(18) NOT NULL,
+  `color` VARCHAR(10) NOT NULL,
+  `weight` DECIMAL(4,1) NOT NULL,
+  `city` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`pnum`),
+  UNIQUE INDEX `pname` (`pname` ASC, `color` ASC, `city` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `sp`.`s`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sp`.`s` (
+  `snum` INT NOT NULL,
+  `sname` VARCHAR(16) NOT NULL,
+  `status` INT NOT NULL,
+  `city` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`snum`),
+  UNIQUE INDEX `sname` (`sname` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `sp`.`sp`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sp`.`sp` (
+  `snum` INT NOT NULL,
+  `pnum` INT NOT NULL,
+  `qty` INT NOT NULL,
+  PRIMARY KEY (`snum`, `pnum`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+USE `zomato_dbms` ;
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`coupon`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`coupon` (
+  `coupon_id` INT NOT NULL,
+  `coupon_code` VARCHAR(20) NULL DEFAULT NULL,
+  `discount_percent` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`coupon_id`),
+  UNIQUE INDEX `coupon_code` (`coupon_code` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`customer`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`customer` (
+  `customer_id` INT NOT NULL AUTO_INCREMENT,
+  `full_name` VARCHAR(50) NOT NULL,
+  `email` VARCHAR(60) NOT NULL,
+  `phone` CHAR(10) NOT NULL,
+  `dob` DATE NULL DEFAULT NULL,
+  `created_at` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`customer_id`),
+  UNIQUE INDEX `email` (`email` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`restaurant`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`restaurant` (
+  `restaurant_id` INT NOT NULL,
+  `restaurant_name` VARCHAR(80) NOT NULL,
+  `fssai_no` CHAR(14) NULL DEFAULT NULL,
+  `contact_no` CHAR(10) NULL DEFAULT NULL,
+  PRIMARY KEY (`restaurant_id`),
+  UNIQUE INDEX `fssai_no` (`fssai_no` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`restaurant_branch`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`restaurant_branch` (
+  `branch_id` INT NOT NULL,
+  `restaurant_id` INT NULL DEFAULT NULL,
+  `location` VARCHAR(100) NULL DEFAULT NULL,
+  `open_time` TIME NULL DEFAULT NULL,
+  `close_time` TIME NULL DEFAULT NULL,
+  PRIMARY KEY (`branch_id`),
+  INDEX `restaurant_id` (`restaurant_id` ASC) VISIBLE,
+  CONSTRAINT `restaurant_branch_ibfk_1`
+    FOREIGN KEY (`restaurant_id`)
+    REFERENCES `zomato_dbms`.`restaurant` (`restaurant_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`orders`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`orders` (
+  `order_id` INT NOT NULL,
+  `customer_id` INT NULL DEFAULT NULL,
+  `branch_id` INT NULL DEFAULT NULL,
+  `order_time` TIMESTAMP NULL DEFAULT NULL,
+  `total_amount` DECIMAL(8,2) NULL DEFAULT NULL,
+  `order_status` VARCHAR(20) NULL DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  INDEX `customer_id` (`customer_id` ASC) VISIBLE,
+  INDEX `branch_id` (`branch_id` ASC) VISIBLE,
+  CONSTRAINT `orders_ibfk_1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `zomato_dbms`.`customer` (`customer_id`),
+  CONSTRAINT `orders_ibfk_2`
+    FOREIGN KEY (`branch_id`)
+    REFERENCES `zomato_dbms`.`restaurant_branch` (`branch_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`coupon_redemption`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`coupon_redemption` (
+  `redemption_id` INT NOT NULL,
+  `coupon_id` INT NULL DEFAULT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `customer_id` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`redemption_id`),
+  INDEX `coupon_id` (`coupon_id` ASC) VISIBLE,
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  INDEX `customer_id` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `coupon_redemption_ibfk_1`
+    FOREIGN KEY (`coupon_id`)
+    REFERENCES `zomato_dbms`.`coupon` (`coupon_id`),
+  CONSTRAINT `coupon_redemption_ibfk_2`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`),
+  CONSTRAINT `coupon_redemption_ibfk_3`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `zomato_dbms`.`customer` (`customer_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`cuisine`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`cuisine` (
+  `cuisine_id` INT NOT NULL,
+  `cuisine_name` VARCHAR(30) NULL DEFAULT NULL,
+  PRIMARY KEY (`cuisine_id`),
+  UNIQUE INDEX `cuisine_name` (`cuisine_name` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`customer_address`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`customer_address` (
+  `address_id` INT NOT NULL,
+  `customer_id` INT NULL DEFAULT NULL,
+  `address` TEXT NOT NULL,
+  `city` VARCHAR(30) NULL DEFAULT NULL,
+  `pincode` CHAR(6) NULL DEFAULT NULL,
+  PRIMARY KEY (`address_id`),
+  INDEX `customer_id` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `customer_address_ibfk_1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `zomato_dbms`.`customer` (`customer_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`customer_subscription`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`customer_subscription` (
+  `subscription_id` INT NOT NULL,
+  `customer_id` INT NULL DEFAULT NULL,
+  `plan_name` VARCHAR(30) NULL DEFAULT NULL,
+  `start_date` DATE NULL DEFAULT NULL,
+  `end_date` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`subscription_id`),
+  INDEX `customer_id` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `customer_subscription_ibfk_1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `zomato_dbms`.`customer` (`customer_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`delivery_partner`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`delivery_partner` (
+  `partner_id` INT NOT NULL,
+  `partner_name` VARCHAR(50) NULL DEFAULT NULL,
+  `phone` CHAR(10) NULL DEFAULT NULL,
+  `vehicle_type` VARCHAR(20) NULL DEFAULT NULL,
+  `joining_date` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`partner_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`delivery_assignment`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`delivery_assignment` (
+  `assignment_id` INT NOT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `partner_id` INT NULL DEFAULT NULL,
+  `assigned_time` TIMESTAMP NULL DEFAULT NULL,
+  `delivered_time` TIMESTAMP NULL DEFAULT NULL,
+  PRIMARY KEY (`assignment_id`),
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  INDEX `partner_id` (`partner_id` ASC) VISIBLE,
+  CONSTRAINT `delivery_assignment_ibfk_1`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`),
+  CONSTRAINT `delivery_assignment_ibfk_2`
+    FOREIGN KEY (`partner_id`)
+    REFERENCES `zomato_dbms`.`delivery_partner` (`partner_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`menu`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`menu` (
+  `menu_id` INT NOT NULL,
+  `branch_id` INT NULL DEFAULT NULL,
+  `created_on` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`menu_id`),
+  INDEX `branch_id` (`branch_id` ASC) VISIBLE,
+  CONSTRAINT `menu_ibfk_1`
+    FOREIGN KEY (`branch_id`)
+    REFERENCES `zomato_dbms`.`restaurant_branch` (`branch_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`menu_category`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`menu_category` (
+  `category_id` INT NOT NULL,
+  `category_name` VARCHAR(30) NULL DEFAULT NULL,
+  PRIMARY KEY (`category_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`menu_item`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`menu_item` (
+  `item_id` INT NOT NULL,
+  `menu_id` INT NULL DEFAULT NULL,
+  `category_id` INT NULL DEFAULT NULL,
+  `item_name` VARCHAR(60) NULL DEFAULT NULL,
+  `price` DECIMAL(6,2) NULL DEFAULT NULL,
+  `is_veg` TINYINT(1) NULL DEFAULT NULL,
+  `availability` TINYINT(1) NULL DEFAULT NULL,
+  PRIMARY KEY (`item_id`),
+  INDEX `menu_id` (`menu_id` ASC) VISIBLE,
+  INDEX `category_id` (`category_id` ASC) VISIBLE,
+  CONSTRAINT `menu_item_ibfk_1`
+    FOREIGN KEY (`menu_id`)
+    REFERENCES `zomato_dbms`.`menu` (`menu_id`),
+  CONSTRAINT `menu_item_ibfk_2`
+    FOREIGN KEY (`category_id`)
+    REFERENCES `zomato_dbms`.`menu_category` (`category_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`order_item`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`order_item` (
+  `order_id` INT NOT NULL,
+  `item_id` INT NOT NULL,
+  `quantity` INT NULL DEFAULT NULL,
+  `item_price` DECIMAL(6,2) NULL DEFAULT NULL,
+  PRIMARY KEY (`order_id`, `item_id`),
+  INDEX `item_id` (`item_id` ASC) VISIBLE,
+  CONSTRAINT `order_item_ibfk_1`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`),
+  CONSTRAINT `order_item_ibfk_2`
+    FOREIGN KEY (`item_id`)
+    REFERENCES `zomato_dbms`.`menu_item` (`item_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`payment`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`payment` (
+  `payment_id` INT NOT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `payment_mode` VARCHAR(15) NULL DEFAULT NULL,
+  `payment_date` TIMESTAMP NULL DEFAULT NULL,
+  `amount` DECIMAL(8,2) NULL DEFAULT NULL,
+  PRIMARY KEY (`payment_id`),
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  CONSTRAINT `payment_ibfk_1`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`rating`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`rating` (
+  `rating_id` INT NOT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `rating` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`rating_id`),
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  CONSTRAINT `rating_ibfk_1`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`restaurant_cuisine`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`restaurant_cuisine` (
+  `restaurant_id` INT NOT NULL,
+  `cuisine_id` INT NOT NULL,
+  PRIMARY KEY (`restaurant_id`, `cuisine_id`),
+  INDEX `cuisine_id` (`cuisine_id` ASC) VISIBLE,
+  CONSTRAINT `restaurant_cuisine_ibfk_1`
+    FOREIGN KEY (`restaurant_id`)
+    REFERENCES `zomato_dbms`.`restaurant` (`restaurant_id`),
+  CONSTRAINT `restaurant_cuisine_ibfk_2`
+    FOREIGN KEY (`cuisine_id`)
+    REFERENCES `zomato_dbms`.`cuisine` (`cuisine_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`review`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`review` (
+  `review_id` INT NOT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `review_text` VARCHAR(255) NULL DEFAULT NULL,
+  `review_date` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`review_id`),
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  CONSTRAINT `review_ibfk_1`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+-- -----------------------------------------------------
+-- Table `zomato_dbms`.`support_ticket`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `zomato_dbms`.`support_ticket` (
+  `ticket_id` INT NOT NULL,
+  `customer_id` INT NULL DEFAULT NULL,
+  `order_id` INT NULL DEFAULT NULL,
+  `issue_type` VARCHAR(40) NULL DEFAULT NULL,
+  `status` VARCHAR(20) NULL DEFAULT NULL,
+  `created_on` DATE NULL DEFAULT NULL,
+  PRIMARY KEY (`ticket_id`),
+  INDEX `customer_id` (`customer_id` ASC) VISIBLE,
+  INDEX `order_id` (`order_id` ASC) VISIBLE,
+  CONSTRAINT `support_ticket_ibfk_1`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `zomato_dbms`.`customer` (`customer_id`),
+  CONSTRAINT `support_ticket_ibfk_2`
+    FOREIGN KEY (`order_id`)
+    REFERENCES `zomato_dbms`.`orders` (`order_id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
